@@ -27,4 +27,10 @@ SECURITY.md
 third-party/
 utils/
 
-llvm/
+llvm/*
+!llvm/lib
+llvm/lib/*
+!llvm/lib/Transforms
+llvm/lib/Transforms/*
+!llvm/lib/Transforms/OurLoopInvariantCodeMotionPass
+!llvm/lib/Transforms/CMakeLists.txt
