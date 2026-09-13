@@ -1,10 +1,7 @@
-add_llvm_library(
-  LLVMOurLoopInvariantCodeMotionPass
-  MODULE
-  BUILDTREE_ONLY
-  LoopInvariantAnalysis.cpp
-  OurLoopInvariantCodeMotionPass.cpp
-  DEPENDS
-  intrinsics_gen
-  PLUGIN_TOOL
-  opt)
+add_llvm_library( LLVMOurLoopInvariantCodeMotionPass MODULE BUILDTREE_ONLY
+        OurLoopInvariantCodeMotionPass.cpp
+        LoopInvariantAnalysis.cpp
+        DEPENDS
+        intrinsics_gen
+        PLUGIN_TOOL
+        opt)

@@ -4,6 +4,7 @@
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Instruction.h"
+#include "llvm/IR/Instructions.h"
 
 #include <algorithm>
 
@@ -35,6 +36,11 @@ LoopInvariantAnalysis::findInvariantInstructions(Loop &CurrentLoop) const {
         // operacije i celobrojno poredjenje
         if (!isSupportedInstruction(Instruction))
           continue;
+
+        if (auto LoadInstruction = dyn_cast<LoadInst>(&Instruction)) {
+          if (!isLoadInstructionInvariant(LoadInstruction, CurrentLoop))
+            continue;
+        }
 
         // vec pronadjene invarijantne instrukcije ne proveravamo ponovo.
         if (std::find(InvariantInstructions.begin(),
@@ -81,6 +87,7 @@ bool LoopInvariantAnalysis::isSupportedInstruction(
   case Instruction::And:
   case Instruction::Or:
   case Instruction::ICmp:
+  case Instruction::Load:
     return true;
   default:
     return false;
@@ -90,9 +97,10 @@ bool LoopInvariantAnalysis::isSupportedInstruction(
 bool LoopInvariantAnalysis::isInvariantOperand(
     const Value &Operand, const Loop &CurrentLoop,
     const std::vector<Instruction *> &InvariantInstructions) const {
-  // isLoopInvariant vraca true za vrednosti definisane van petlje, kao i za globale,
-  // argumente funkcije i konstante, vraca false za instrukcije koje su jos unutar petlje
-  // a one mogu ipak biti logicki invarijantne, pa njih trazimo u nasem vektoru
+  // isLoopInvariant vraca true za vrednosti definisane van petlje, kao i za
+  // globale, argumente funkcije i konstante, vraca false za instrukcije koje su
+  // jos unutar petlje a one mogu ipak biti logicki invarijantne, pa njih
+  // trazimo u nasem vektoru
   if (CurrentLoop.isLoopInvariant(&Operand))
     return true;
 
@@ -108,4 +116,26 @@ bool LoopInvariantAnalysis::isInsideSubLoop(const BasicBlock &Block,
   return std::any_of(
       CurrentLoop.getSubLoops().begin(), CurrentLoop.getSubLoops().end(),
       [&](const llvm::Loop *SubLoop) { return SubLoop->contains(&Block); });
+}
+
+bool LoopInvariantAnalysis::isLoadInstructionInvariant(
+    llvm::LoadInst *LoadInst, llvm::Loop &CurrentLoop) const {
+  Value *Operand = LoadInst->getOperand(0);
+
+  if (!CurrentLoop.isLoopInvariant(Operand))
+    return false;
+
+  // Da bi store bio invarijantan, mora da se nista ne upisuje u taj operand u
+  // petlji...
+  for (BasicBlock *BB : CurrentLoop.getBlocks()) {
+    for (Instruction &I : *BB) {
+      if (auto StoreInstruction = dyn_cast<StoreInst>(&I)) {
+        Value *StoreOperand = StoreInstruction->getOperand(1);
+        if (StoreOperand == Operand)
+          return false;
+      }
+    }
+  }
+
+  return true;
 }

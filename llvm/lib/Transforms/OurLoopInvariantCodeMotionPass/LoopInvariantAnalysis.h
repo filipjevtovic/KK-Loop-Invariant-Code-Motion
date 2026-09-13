@@ -1,6 +1,8 @@
 #ifndef LLVM_TRANSFORMS_OURLOOPINVARIANTCODEMOTIONPASS_LOOPINVARIANTANALYSIS_H
 #define LLVM_TRANSFORMS_OURLOOPINVARIANTCODEMOTIONPASS_LOOPINVARIANTANALYSIS_H
 
+#include "llvm/IR/Instruction.h"
+#include "llvm/IR/Instructions.h"
 #include <vector>
 
 namespace llvm {
@@ -26,6 +28,9 @@ private:
 
   bool isInsideSubLoop(const llvm::BasicBlock &Block,
                        const llvm::Loop &CurrentLoop) const;
+
+  bool isLoadInstructionInvariant(llvm::LoadInst *LoadInst,
+                                  llvm::Loop &CurrentLoop) const;
 };
 
 #endif
