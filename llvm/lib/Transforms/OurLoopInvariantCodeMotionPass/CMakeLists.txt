@@ -2,6 +2,7 @@ add_llvm_library(
   LLVMOurLoopInvariantCodeMotionPass
   MODULE
   BUILDTREE_ONLY
+  LoopInvariantAnalysis.cpp
   OurLoopInvariantCodeMotionPass.cpp
   DEPENDS
   intrinsics_gen
